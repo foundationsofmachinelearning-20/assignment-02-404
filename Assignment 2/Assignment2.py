@@ -97,7 +97,7 @@ def count_length(edge_temp):
 
 """ =======================  Load Data ======================= """
 img = np.load('images.npy', allow_pickle=True)
-Labels= np.load('Labels.npy', allow_pickle=True)
+Labels= np.load('Labels_2.npy', allow_pickle=True)
 """ ======================= Seperate into training and Testing ======================= """
 #Take data from each group at random.... 
 #This dataset is only 121 points
