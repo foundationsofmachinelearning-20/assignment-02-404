@@ -1,15 +1,15 @@
-import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
 import scipy.stats as stats
 import math
+import cv2
 
 
 # functions
 
-#EdgeHistogramComputer, modified from public feature extraction code found on
-#https://github.com/scferrada/imgpedia
+# EdgeHistogramComputer, modified from public feature extraction code found on
+# https://github.com/scferrada/imgpedia
 
 class EdgeHistogramComputer:
 
@@ -208,6 +208,18 @@ posc2 = multivariate_normal.pdf(Features_test, class2_MUS, class2_COV, True)
 posc3 = multivariate_normal.pdf(Features_test, class3_MUS, class3_COV, True)
 posc4 = multivariate_normal.pdf(Features_test, class4_MUS, class4_COV, True)
 
+COV=[[ class0_COV],
+       [ class1_COV],
+       [ class2_COV],
+       [ class3_COV],
+       [ class4_COV]]
+MU=[[class0_MUS],
+    [class1_MUS],
+    [class2_MUS],
+    [class3_MUS],
+    [class4_MUS]]
+#print('Class 0 Mus',[class0_MUS])
+#print('Class 2 COV matrix',[class2_COV])
 prediction_temp = 0
 predictedlabels = []
 
@@ -226,7 +238,7 @@ for k in range(predictedlabels.size):
     if predictedlabels[k] == Labels_test[k]:
         correct += 1
     total += 1
-#print(correct/total)
+print(correct/total)
 confusionMatrix = np.zeros((5,5))
 
 check_c2_ca_c1 = 0
@@ -240,3 +252,8 @@ for i in range(Labels_test.size):
 
 print("Confusion Matrix:")
 print(confusionMatrix)
+
+np.save('Features_test', Features_test)
+np.save('Labels_test', Labels_test )
+np.save('Trained_COV', COV)
+np.save('Trained_MU', MU)
