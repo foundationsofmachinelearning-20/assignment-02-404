@@ -60,6 +60,12 @@ class EdgeHistogramComputer:
         return descriptor
 
 
+#Extracting features from one image
+EHDComp = EdgeHistogramComputer(4,4)
+One_Image = np.load('One_Image.npy')
+print("Features From One Image, listed by VE,HE,45,135,NE")
+print(EHDComp.compute(One_Image)[16])
+
 
 #Load testing data and information for trained model
 #test points

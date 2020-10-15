@@ -4,9 +4,16 @@ from scipy.stats import multivariate_normal
 import scipy.stats as stats
 import math
 import cv2
-
+import itertools
 
 # functions
+
+def findsubsets(s,n):
+    return np.array(list(itertools.combinations(s,n)))
+
+def triangle_area(coord1,coord2,coord3):
+    x1, y1, x2, y2, x3, y3 = coord1[0], coord1[1], coord2[0], coord2[1], coord3[0], coord3[1]
+    return abs(0.5 * (((x2-x1)*(y3-y1))-((x3-x1)*(y2-y1))))
 
 # EdgeHistogramComputer, modified from public feature extraction code found on
 # https://github.com/scferrada/imgpedia
@@ -15,11 +22,11 @@ class EdgeHistogramComputer:
 
     def __init__(self, rows, cols):
         sqrt2 = math.sqrt(2)
-        self.kernels = (np.array([[1, 1], [-1, -1]]), #Vertical Edge
-                        np.array([[1, -1], [1, -1]]), # Horizontal edge
-                        np.array([[sqrt2, 0], [0, -sqrt2]]), # Diagonal (45)
-                        np.array([[0, sqrt2], [-sqrt2, 0]]), # diagaonal (135)
-                        np.array([[2, -2], [-2, 2]])) #  Non-Orientation
+        self.kernels = (np.array([[1, 1], [-1, -1]]),  # Vertical Edge
+                        np.array([[1, -1], [1, -1]]),  # Horizontal edge
+                        np.array([[sqrt2, 0], [0, -sqrt2]]),  # Diagonal (45)
+                        np.array([[0, sqrt2], [-sqrt2, 0]]),  # diagaonal (135)
+                        np.array([[2, -2], [-2, 2]]))  # Non-Orientation
         self.bins = [len(self.kernels)]
         self.range = [0, len(self.kernels)]
         self.rows = rows
@@ -52,9 +59,9 @@ class EdgeHistogramComputer:
 
         # return np.concatenate([x for x in descriptor])
         descriptor = np.array(descriptor)
-        globalEdges = np.transpose(descriptor.mean(0))[...,None]
-        descriptor = np.append(descriptor, globalEdges ,axis=0)
-        descriptor = np.squeeze(descriptor,2)
+        globalEdges = np.transpose(descriptor.mean(0))[..., None]
+        descriptor = np.append(descriptor, globalEdges, axis=0)
+        descriptor = np.squeeze(descriptor, 2)
         return descriptor
 
 
@@ -122,7 +129,7 @@ Labels_test = np.array(Labels_test)
 print("Features Vector of One Image: ")
 print(Features[1])
 
-
+print(Features.shape)
 # plt.figure(1)
 # plt.bar([1, 2, 3, 4, 5], Features[16])
 # plt.xticks([1, 2, 3, 4, 5], ['VE', 'HE', 'D45', 'D135', 'NO'])
@@ -146,15 +153,50 @@ class3_MUS, class3_COV, class3_Features, pc3 = featureMUandVar(Features, Labels,
 class4_MUS, class4_COV, class4_Features, pc4 = featureMUandVar(Features, Labels, 4)
 # Plotting the features for graphs
 
-plt.figure(1)
+class1_2d = findsubsets(class1_MUS,2)
+class2_2d = findsubsets(class2_MUS,2)
+class3_2d = findsubsets(class3_MUS,2)
+#finding the most distinct groups for plotting
+triangle_a = 0
+currentSubset = 0
+print(class1_2d)
+for i in range(len(class1_2d)):
+    if triangle_area(class1_2d[i],class2_2d[i],class3_2d[i]) >= triangle_a:
+        triangle_a = triangle_area(class1_2d[i],class2_2d[i],class3_2d[i])
+        currentSubset = i
 
-plt.plot(class1_Features[:, 0], class1_Features[:, 1], 'bo', label=' class 1 features 1 v 2')
-plt.plot(class2_Features[:, 0], class2_Features[:, 1], 'go', label='class 2 features 1 v 2')
-plt.plot(class3_Features[:, 0], class3_Features[:, 1], 'ro', label='class 3 featires 1 v 2')
+print(currentSubset)
+
+
+
+
+plt.figure(1)
+plt.title("HE vs 135, Class 1, 2, and 3")
+plt.plot(class1_Features[:, 1], class1_Features[:, 3], 'bo', label=' class 1 features 1 v 2')
+plt.plot(class2_Features[:, 1], class2_Features[:, 3], 'go', label='class 2 features 1 v 2')
+plt.plot(class3_Features[:, 1], class3_Features[:, 3], 'ro', label='class 3 features 1 v 2')
+
 
 plt.figure(2)
+plt.title("Class 1 Feature 1 Distribution")
+plt.hist(class1_Features[:, 0], 50)
+
+plt.figure(3)
+plt.title("Class 1 Feature 2 Distribution")
+plt.hist(class1_Features[:, 1], 50)
+
+plt.figure(4)
+plt.title("Class 1 Feature 3 Distribution")
 plt.hist(class1_Features[:, 2], 50)
-# plt.show()
+
+plt.figure(5)
+plt.title("Class 1 Feature 4 Distribution")
+plt.hist(class1_Features[:, 3], 50)
+
+plt.figure(6)
+plt.title("Class 1 Feature 5 Distribution")
+plt.hist(class1_Features[:, 4], 50)
+plt.show()
 
 # visualizing with multivariate norm
 
@@ -177,29 +219,29 @@ y3 = multivariate_normal.pdf(X, mean=class3_MUS, cov=class3_COV)
 y4 = multivariate_normal.pdf(X, mean=class4_MUS, cov=class4_COV, allow_singular=True)
 
 # calculate posteriors
-#pos0 = (y0 * pc0) / (y0 * pc0 + y1 * pc1 + y2 * pc2 + y3 * pc3 + y4 * pc4)
-#pos1 = (y1 * pc1) / (y0 * pc0 + y1 * pc1 + y2 * pc2 + y3 * pc3 + y4 * pc4)
-#pos2 = (y2 * pc2) / (y0 * pc0 + y1 * pc1 + y2 * pc2 + y3 * pc3 + y4 * pc4)
-#pos3 = (y3 * pc3) / (y0 * pc0 + y1 * pc1 + y2 * pc2 + y3 * pc3 + y4 * pc4)
-#pos4 = (y4 * pc4) / (y0 * pc0 + y1 * pc1 + y2 * pc2 + y3 * pc3 + y4 * pc4)
+# pos0 = (y0 * pc0) / (y0 * pc0 + y1 * pc1 + y2 * pc2 + y3 * pc3 + y4 * pc4)
+# pos1 = (y1 * pc1) / (y0 * pc0 + y1 * pc1 + y2 * pc2 + y3 * pc3 + y4 * pc4)
+# pos2 = (y2 * pc2) / (y0 * pc0 + y1 * pc1 + y2 * pc2 + y3 * pc3 + y4 * pc4)
+# pos3 = (y3 * pc3) / (y0 * pc0 + y1 * pc1 + y2 * pc2 + y3 * pc3 + y4 * pc4)
+# pos4 = (y4 * pc4) / (y0 * pc0 + y1 * pc1 + y2 * pc2 + y3 * pc3 + y4 * pc4)
 
 # Testing Data
-#Images_test = np.load("image.npy")
-#Labels_test = np.load("label.npy")
+# Images_test = np.load("image.npy")
+# Labels_test = np.load("label.npy")
 
 # Images_test = np.delete(Images_test,104,0)
 
-#print(Images_test.shape)
-#print(Labels_test.shape)
+# print(Images_test.shape)
+# print(Labels_test.shape)
 
-#Features_test = []
+# Features_test = []
 
-#for data in Images_test:
+# for data in Images_test:
 #    IMG_EHD = EHDComp.compute(data)
 #    Features_test.append(IMG_EHD[16])
-#Features_test = np.array(Features_test)
+# Features_test = np.array(Features_test)
 
-#print(Features_test)
+# print(Features_test)
 
 # testing
 posc0 = multivariate_normal.pdf(Features_test, class0_MUS, class0_COV, True)
@@ -208,21 +250,20 @@ posc2 = multivariate_normal.pdf(Features_test, class2_MUS, class2_COV, True)
 posc3 = multivariate_normal.pdf(Features_test, class3_MUS, class3_COV, True)
 posc4 = multivariate_normal.pdf(Features_test, class4_MUS, class4_COV, True)
 
-COV=[[ class0_COV],
-       [ class1_COV],
-       [ class2_COV],
-       [ class3_COV],
-       [ class4_COV]]
-MU=[[class0_MUS],
-    [class1_MUS],
-    [class2_MUS],
-    [class3_MUS],
-    [class4_MUS]]
-#print('Class 0 Mus',[class0_MUS])
-#print('Class 2 COV matrix',[class2_COV])
+COV = [[class0_COV],
+       [class1_COV],
+       [class2_COV],
+       [class3_COV],
+       [class4_COV]]
+MU = [[class0_MUS],
+      [class1_MUS],
+      [class2_MUS],
+      [class3_MUS],
+      [class4_MUS]]
+# print('Class 0 Mus',[class0_MUS])
+# print('Class 2 COV matrix',[class2_COV])
 prediction_temp = 0
 predictedlabels = []
-
 
 for i in range(posc0.size):
     temp_vect = np.array([posc0[i], posc1[i], posc2[i], posc3[i], posc4[i]])
@@ -238,22 +279,19 @@ for k in range(predictedlabels.size):
     if predictedlabels[k] == Labels_test[k]:
         correct += 1
     total += 1
-print(correct/total)
-confusionMatrix = np.zeros((5,5))
+print(correct / total)
+confusionMatrix = np.zeros((5, 5))
 
 check_c2_ca_c1 = 0
 
-
-
-
 for i in range(Labels_test.size):
-    confusionMatrix[Labels_test[i],[predictedlabels[i]]] += 1
-
+    confusionMatrix[Labels_test[i], [predictedlabels[i]]] += 1
 
 print("Confusion Matrix:")
 print(confusionMatrix)
 
 np.save('Features_test', Features_test)
-np.save('Labels_test', Labels_test )
+np.save('Labels_test', Labels_test)
 np.save('Trained_COV', COV)
 np.save('Trained_MU', MU)
+np.save('One_Image', Images[6])
